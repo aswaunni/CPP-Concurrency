@@ -1,3 +1,5 @@
+// USING RAW MUTEX
+
 #include <mutex>
 #include <queue>
 
@@ -27,4 +29,34 @@ public:
         m.unlock();
     };
 
+};
+
+// USING LOCK GUARD
+
+#include <mutex>
+#include <queue>
+
+class threadSafe_queue {
+
+    std::queue<int> rawQueue; // shared structure between all threads
+    std::mutex m; // rawQueue's red door
+
+public:
+
+    int& retrieve_and_delete() {
+        int front_value = 0; // if empty return 0
+        std::lock_guard<std::mutex> lg(m);
+        // From now on, the current thread is the only one that can access rawQueue
+        if( !rawQueue.empty() ) {
+            front_value = rawQueue.front();
+            rawQueue.pop();
+        }
+        return front_value;
+    };  // other threads can lock the mutex now
+
+    void push(int val) {
+        std::lock_guard<std::mutex> lg(m);
+        // from now on, the current thread is the only one that can access rawQueue
+        rawQueue.push(val);
+    }; // other threads can lock the mutex now
 };
